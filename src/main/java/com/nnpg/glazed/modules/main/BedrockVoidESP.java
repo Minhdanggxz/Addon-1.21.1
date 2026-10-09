@@ -178,8 +178,7 @@ public class BedrockVoidESP extends Module {
 
     @EventHandler
     private void onChunkLoad(ChunkDataEvent event) {
-        // In Meteor for 1.21.1 this is a public field (not event.chunk()).
-        submitScan(event.chunk);
+        if (event.chunk() instanceof WorldChunk worldChunk) submitScan(worldChunk);
     }
 
     @EventHandler
