@@ -2,6 +2,7 @@ package com.nnpg.glazed;
 
 import com.nnpg.glazed.modules.esp.BedrockVoidESP;
 import com.nnpg.glazed.modules.esp.RegionMap;
+import com.nnpg.glazed.modules.esp.SusChunkFinder;
 import com.nnpg.glazed.modules.main.GlazedFreecam;
 import com.nnpg.glazed.modules.main.GodTrident;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -9,7 +10,7 @@ import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 
 public class GlazedAddon extends MeteorAddon {
-    public static final Category CATEGORY = new Category("DFiz Addons");
+    public static final Category CATEGORY = new Category("Glazed");
 
     // Same category: modules that use GlazedAddon.esp still work.
     public static final Category esp = CATEGORY;
@@ -20,6 +21,7 @@ public class GlazedAddon extends MeteorAddon {
         Modules.get().add(new GodTrident());
         Modules.get().add(new BedrockVoidESP());
         Modules.get().add(new RegionMap());
+        Modules.get().add(new SusChunkFinder());
     }
 
     @Override
