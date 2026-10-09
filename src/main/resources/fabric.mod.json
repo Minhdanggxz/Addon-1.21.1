@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "glazed-addon",
+  "version": "${version}",
+  "name": "Glazed Addon",
+  "description": "Glazed modules ported to 1.21.1.",
+  "authors": ["you"],
+  "environment": "client",
+  "entrypoints": {
+    "meteor": ["com.nnpg.glazed.GlazedAddon"]
+  },
+  "mixins": ["glazed.mixins.json"],
+  "custom": {
+    "meteor-client:color": "255,120,200"
+  },
+  "depends": {
+    "java": ">=21",
+    "minecraft": "1.21.1",
+    "meteor-client": "*"
+  }
+}
