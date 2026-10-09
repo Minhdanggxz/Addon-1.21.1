@@ -9,7 +9,7 @@ import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 
 public class GlazedAddon extends MeteorAddon {
-    public static final Category CATEGORY = new Category("Glazed");
+    public static final Category CATEGORY = new Category("DFiz Addons");
 
     // Same category: modules that use GlazedAddon.esp still work.
     public static final Category esp = CATEGORY;
