@@ -32,6 +32,24 @@ public class GlazedFreecam extends Module {
         .name("speed")
         .description("Move freely.")
         .defaultValue(0.8)
+        .min(0.05)
+        .max(20.0)
+        .sliderRange(0.05, 20.0)
+        .build()
+    );
+
+    private final Setting<Boolean> staySneaking = sgGeneral.add(new BoolSetting.Builder()
+        .name("stay-sneaking")
+        .description("If you were already sneaking when you enabled freecam, keeps you sneaking so you stay on the ground and mine underwater faster.")
+        .defaultValue(true)
+        .build()
+    );
+
+    public final Vector3d currentPosition = new Vector3d();
+    public final Vector3d previousPosition = new Vector3d();
+
+    public float yaw;
+    public float pitch;
     public float previousYaw;
     public float previousPitch;
 
@@ -68,6 +86,110 @@ public class GlazedFreecam extends Module {
 
         yaw = mc.player.getYaw();
         pitch = mc.player.getPitch();
+        currentPerspective = mc.options.getPerspective();
+
+        Vec3d eyePos = mc.player.getEyePos();
+        currentPosition.set(eyePos.x, eyePos.y, eyePos.z);
+        previousPosition.set(eyePos.x, eyePos.y, eyePos.z);
+
+        mc.player.setVelocity(0.0, 0.0, 0.0);
+
+        if (currentPerspective == Perspective.THIRD_PERSON_FRONT) {
+            yaw += 180.0f;
+            pitch *= -1.0f;
+        }
+
+        mc.options.setPerspective(Perspective.FIRST_PERSON);
+
+        previousYaw = yaw;
+        previousPitch = pitch;
+
+        isMovingForward = mc.options.forwardKey.isPressed();
+        isMovingBackward = mc.options.backKey.isPressed();
+        isMovingRight = mc.options.rightKey.isPressed();
+        isMovingLeft = mc.options.leftKey.isPressed();
+        isMovingUp = mc.options.jumpKey.isPressed();
+        isMovingDown = mc.options.sneakKey.isPressed();
+
+        sneakOnEnable = mc.player.isSneaking();
+
+        lastFrameTime = System.currentTimeMillis();
+        resetMovementKeys();
+
+        if (mc.worldRenderer != null) mc.worldRenderer.reload();
+    }
+
+    @Override
+    public void onDeactivate() {
+        restoreView();
+    }
+
+    @EventHandler
+    private void onGameLeft(GameLeftEvent event) {
+        restoreView();
+        toggle();
+    }
+
+    @EventHandler
+    private void onRespawn(PacketEvent.Receive event) {
+        if (!(event.packet instanceof PlayerRespawnS2CPacket)) return;
+
+        restoreView();
+        toggle();
+    }
+
+    private void restoreView() {
+        resetMovementKeys();
+
+        sneakOnEnable = false;
+
+        previousPosition.set(currentPosition);
+        previousYaw = yaw;
+        previousPitch = pitch;
+
+        if (mc.worldRenderer != null) mc.execute(mc.worldRenderer::reload);
+
+        if (mc.options == null) return;
+
+        mc.options.getFovEffectScale().setValue(savedFovEffect);
+        mc.options.getBobView().setValue(savedBobView);
+
+        mc.options.setPerspective(currentPerspective != null ? currentPerspective : Perspective.FIRST_PERSON);
+    }
+
+    @EventHandler
+    private void onChunkOcclusion(ChunkOcclusionEvent event) {
+        event.cancel();
+    }
+
+    @EventHandler
+    private void onTick(TickEvent.Pre event) {
+        if (mc.player == null || mc.options == null) return;
+        resetMovementKeys();
+
+        if (staySneaking.get() && sneakOnEnable) mc.options.sneakKey.setPressed(true);
+
+        if (mc.options.getPerspective() != Perspective.FIRST_PERSON) mc.options.setPerspective(Perspective.FIRST_PERSON);
+    }
+
+    // Called from your GameRenderer mixin (render head), same as the original.
+    public void onGameRender() {
+        if (mc.options == null) return;
+
+        pollMovementKeys();
+
+        previousPosition.set(currentPosition);
+        previousYaw = yaw;
+        previousPitch = pitch;
+
+        long currentTime = System.currentTimeMillis();
+        float deltaTime = (currentTime - lastFrameTime) / 1000.0f;
+        lastFrameTime = currentTime;
+
+        if (deltaTime > 0.1f) deltaTime = 0.1f;
+        if (deltaTime < 0.001f) deltaTime = 0.016f;
+
+        Vec3d forward = Vec3d.fromPolar(0.0f, yaw);
         Vec3d right = Vec3d.fromPolar(0.0f, yaw + 90.0f);
 
         double moveX = 0, moveY = 0, moveZ = 0;
@@ -105,6 +227,49 @@ public class GlazedFreecam extends Module {
         event.cancel();
     }
 
+    public void adjustSpeed(int dir) {
+        double step = Math.max(0.25, speed.get() * 0.15);
+        speed.set(Math.max(0.05, Math.min(20.0, speed.get() + dir * step)));
+    }
+
+    // Called from your mouse / look-direction mixin.
+    public void updateRotation(double deltaYaw, double deltaPitch) {
+        yaw += (float) deltaYaw;
+        pitch += (float) deltaPitch;
+
+        yaw = MathHelper.wrapDegrees(yaw);
+        pitch = MathHelper.clamp(pitch, -90.0f, 90.0f);
+    }
+
+    public double getInterpolatedX(float partialTicks) {
+        return currentPosition.x;
+    }
+
+    public double getInterpolatedY(float partialTicks) {
+        return currentPosition.y;
+    }
+
+    public double getInterpolatedZ(float partialTicks) {
+        return currentPosition.z;
+    }
+
+    public double getInterpolatedYaw(float partialTicks) {
+        return yaw;
+    }
+
+    public double getInterpolatedPitch(float partialTicks) {
+        return pitch;
+    }
+
+    private void resetMovementKeys() {
+        if (mc.options == null) return;
+
+        mc.options.forwardKey.setPressed(false);
+        mc.options.backKey.setPressed(false);
+        mc.options.rightKey.setPressed(false);
+        mc.options.leftKey.setPressed(false);
+        mc.options.jumpKey.setPressed(false);
+        mc.options.sneakKey.setPressed(false);
     }
 
     private void pollMovementKeys() {
