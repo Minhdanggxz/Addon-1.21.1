@@ -552,7 +552,7 @@ public class RegionMap extends Module {
 
                 Renderer2D.COLOR.begin();
                 Renderer2D.COLOR.quad(ctx.mapX, ctx.mapY, ctx.getMapWidth(), ctx.getMapHeight(), bgColor);
-                Renderer2D.COLOR.render();
+                flush();
             } catch (Exception e) {
                 LOG.error("Unhandled error in " + getClass().getSimpleName(), e);
             }
@@ -595,7 +595,7 @@ public class RegionMap extends Module {
                     }
                 }
 
-                Renderer2D.COLOR.render();
+                flush();
             } catch (Exception e) {
                 LOG.error("Unhandled error in " + getClass().getSimpleName(), e);
             }
@@ -621,7 +621,7 @@ public class RegionMap extends Module {
                     Renderer2D.COLOR.quad(ctx.mapX, lineY, ctx.getMapWidth(), 1, lineColor);
                 }
 
-                Renderer2D.COLOR.render();
+                flush();
             } catch (Exception e) {
                 LOG.error("Unhandled error in " + getClass().getSimpleName(), e);
             }
@@ -669,7 +669,7 @@ public class RegionMap extends Module {
 
     private class PlayerTracker {
 
-        void renderPlayerPosition(MapRenderContext ctx, Vec3 playerPos, float yaw, SettingColor indicatorColor) {
+        void renderPlayerPosition(MapRenderContext ctx, Vec3d playerPos, float yaw, SettingColor indicatorColor) {
             if (ctx == null || playerPos == null || indicatorColor == null) return;
 
             try {
@@ -709,7 +709,7 @@ public class RegionMap extends Module {
                 int rightBaseY = centerY - (int) (Math.sin(rightBaseAngle) * arrowSize);
 
                 drawTriangleFilled(tipX, tipY, leftBaseX, leftBaseY, rightBaseX, rightBaseY, indicatorCol);
-                Renderer2D.COLOR.render();
+                flush();
             } catch (Exception e) {
                 LOG.error("Unhandled error in " + getClass().getSimpleName(), e);
             }
@@ -755,5 +755,4 @@ public class RegionMap extends Module {
             return Integer.MAX_VALUE;
         }
     }
-                   }
-                                          
+}
